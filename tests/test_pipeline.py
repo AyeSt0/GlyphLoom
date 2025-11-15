@@ -5,8 +5,8 @@ from glyphloom_core.core.pipeline import run_project
 
 
 def test_pipeline_run(tmp_path: Path) -> None:
-    config = load_project_config()
-    config.output_dir = tmp_path / "output"
+    base_config = load_project_config()
+    config = base_config.model_copy(update={"output_dir": tmp_path / "output"})
     result = run_project(config)
     assert result.success
     assert result.output_dir.exists()
