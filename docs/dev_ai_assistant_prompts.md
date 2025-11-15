@@ -1,322 +1,243 @@
-# 与 AI 助手协作指南（Codex / ChatGPT / Copilot Chat 等）
-
-> 本文是给「AI 助手」看的入职手册，也是你在 VSCode 里使用 Codex 的提示词仓库。  
-> 目标：让 AI 真正变成 GlyphLoom（字织机）项目的协作开发者，而不是随便乱写代码的生成器。
+# GlyphLoom · dev_ai_assistant_prompts.md  
+> 本文件既是「给未来的我」的使用说明，也是「给 AI」的协作规则。
 
 ---
 
-## 0. 使用说明
+## 0. 如何使用本文件（给未来的我）
 
-**推荐使用方式：**
+每次在 VSCode / ChatGPT / 其它对话界面中让 AI 参与开发时，都按下面两步来用：
 
-1. 在 VSCode 中打开一个新的 AI 会话（Codex / Copilot Chat / ChatGPT 插件均可）。
-2. 先复制「**2. 全局 System Prompt 模板**」整段贴进去，作为本会话的开场。
-3. 然后根据你当前在做的事情，在下面几个模板中选择一个：
-   - **Core 开发** → 用「3. Core 开发任务模板」  
-   - **GUI 开发** → 用「4. GUI 开发任务模板」  
-   - **scripts / 自动化** → 用「5. Scripts / 自动化开发任务模板」  
-   - **重构 / 设计决策** → 用「6. 重构 / 结构调整任务模板」
-4. 再附上相关文件内容（或让 AI 自己去读项目里的文件），开始协作开发。
+### 0.1 新开会话：全局启动咒语
 
-> 所有模板都可以按需裁剪，但请尽量保留「边界约束」相关部分，避免 AI 擅自改架构。
+**只要是新对话，第一条消息统一用这个：**
 
----
+请先阅读仓库里的以下文档：
 
-## 1. 全局语言与风格约定
+- docs/dev_ai_assistant_prompts.md
+- docs/project_overview.md
+- docs/roadmap.md
+- docs/design_notes/scope_and_nongoals.md
+- docs/design_notes/platforms.md
 
-在 GlyphLoom 项目中，**请所有 AI 助手遵守以下语言 / 风格约定：**
+把它们当成本仓库的「协作规则 / System Prompt」。
 
-1. **回答语言**
-   - 默认使用 **简体中文** 回答问题。
-   - 遇到专业英文术语（pipeline、adapter、translator、schema 等）可以保留英文，但尽量附上 **简短中文说明**。
+不要修改这些文档的内容。
 
-2. **代码风格**
-   - **标识符统一使用英文：**
-     - 模块名、类名、函数名、变量名、文件名等，统一使用英文（snake_case / PascalCase）。
-   - **注释优先使用中文：**
-     - 行内注释、逻辑说明、复杂分支解释、docstring 等优先用简体中文。
-     - 注释应尽量解释「为什么这么写」，而不是机械重复「代码在做什么」。
-   - Docstring 建议示例：
-     ```python
-     class ProjectConfig(BaseModel):
-         """项目整体配置模型。
+看完后请用 3～5 条要点总结你理解的关键规则（尤其是 core vs gui 的边界、Python 版本、平台策略和小步安全改动原则），然后等待我给你具体任务。
 
-         负责承载 schema 版本、项目路径、LLM 配置等信息。
-         """
-     ```
-
-3. **文档与 commit**
-   - 在说明设计、写开发文档时使用中文；引用英文关键名词时可保留原文。
-   - 本项目已有自动化提交工具（`scripts/auto_commit.py`），AI 不应移除或绕过质量检查逻辑。
+等 AI 总结完再继续后面的任务。  
+如果它总结得不对，直接指出来，让它重读文件再总结一遍。
 
 ---
 
-## 2. 全局 System Prompt 模板（新会话必贴）
+### 0.2 同一会话里的每个「子任务」怎么发指令
 
-> ✅ 建议每次在 VSCode 里新开一个 AI 会话时，先贴下面这一段作为「系统级提示」。
+在同一个会话里，每做一个具体任务，都要：
 
-```text
-你是 GlyphLoom（字织机）项目的协作开发者。
+1. 提醒它遵守本文件规则；
+2. 写清这次的目标；
+3. **列出允许修改的文件清单**（非常重要）；
+4. 要求先说计划再贴代码。
 
-项目简介：
-- GlyphLoom 是一个面向「游戏文本本地化」的流水线工具箱，核心语言为 Python 3.12+。
-- 仓库包含：业务核心库 `glyphloom_core`、GUI 客户端 `glyphloom_gui`、自动化脚本 `scripts/`、文档 `docs/` 和示例 `examples/`。
-- 设计目标是在静态文本层面完成「提取 → 翻译 → QA → 导出」的可配置流水线，主要通过 LLM 驱动本地化翻译。
+**通用子任务模板：**
 
-在任何实现或重构之前，请你遵守以下全局约定：
+记得遵守 `docs/dev_ai_assistant_prompts.md` 和相关设计文档里的规则。
 
-1. 语言与注释
-   - 回答时默认使用【简体中文】。
-   - 代码中的标识符（类名、函数名、变量名等）一律使用英文。
-   - 使用中文 docstring 和中文注释解释关键逻辑，尤其是「为什么要这么做」。
+本次任务只有一个，请按「小步、安全变更」来做。
 
-2. 架构边界（重要）
-   - 请优先参考以下文档，理解当前架构和阶段目标：
-     - `docs/project_overview.md`（项目总览与架构）
-     - `docs/roadmap.md`（开发路线 / 阶段任务）
-     - `docs/design_notes/scope_and_nongoals.md`（做什么 / 不做什么）
-     - `docs/design_notes/platforms.md`（多平台支持策略）
-     - `docs/design_notes/config_and_secrets.md`（配置与密钥策略）
-     - `docs/dev_workflow.md`（日常开发流程）
-   - 不要随意重构目录结构、修改模块职责或更改平台策略，如果确有必要，必须先用中文说明理由。
+目标：
+- （这里写清这次要做什么，例如：实现 TableAdapter 的基础 Excel 读取）
 
-3. Core vs GUI vs Scripts
-   - `glyphloom_core`：
-     - 只写业务逻辑（抽取 / 翻译 / QA / 导出），不能依赖 GUI / PySide / OS 特有 API。
-     - 必须在 Windows / Linux / macOS 三平台表现一致。
-     - 路径处理统一使用 `pathlib.Path`。
-   - `glyphloom_gui`：
-     - 只做界面和调度，调用 core 提供的 API，不在 GUI 层写业务决策。
-   - `scripts/`：
-     - 可以是 Windows-only（PowerShell），但不能移除质量检查逻辑。
-     - 不得写入任何真实 API Key 或其他敏感信息。
+允许修改的文件：
+- path/to/file_1.py
+- path/to/file_2.py
+- （如有测试文件，一起写上）
 
-4. 自动化与质量
-   - 仓库已有：
-     - `scripts/dev_setup.ps1`：开发环境初始化。
-     - `scripts/check_quality.ps1`：统一运行 ruff / black / pytest。
-     - `scripts/auto_commit.py`：带质量闸门的自动提交工具。
-     - `.github/workflows/ci.yml`：Win/Linux/macOS 三平台 CI。
-   - 不要删除或绕过这套质量门槛，新增逻辑时应与现有流程兼容。
+除上述文件外，其他文件一律不要改动（除非我在这条消息里明确写出来）。
 
-后续我会告诉你：
-- 当前处于 Roadmap 的哪个 Stage；
-- 本轮允许修改的文件列表；
-- 需要实现的具体目标（类 / 函数 / CLI / GUI / 测试等）。
+请按下面步骤输出：
+1. 先用 3～5 条要点说明你打算怎么修改这些文件；
+2. 然后给出修改后的完整代码块（只包含允许改动的文件）；
+3. 最后告诉我如何在本地验证（例如 pytest 命令、手动运行方式）。
 
-请在任何回答中都遵守以上约定。
-```
+代码里请使用中文注释解释关键逻辑。
+
+**如果是只读不改的任务（例如 review / 讲解）：**
+
+记得遵守 `docs/dev_ai_assistant_prompts.md` 里的规则。
+
+本次任务是代码 review，只能阅读、分析下面这些文件，不要修改任何文件，也不要虚构不存在的文件：
+
+需要阅读的文件：
+- path/to/file_1.py
+- path/to/file_2.py
+
+请先列出你会重点检查哪些方面（例如：边界情况、异常处理、命名一致性、是否符合 project_overview 的设计），然后再开始给出分析。
 
 ---
 
-## 3. Core 开发任务模板（glyphloom_core）
+## 1. 通用协作规则（给 AI 看的）
 
-> 用于在 VSCode 里让 AI 编写 /修改 `glyphloom_core` 相关代码时使用。
+> 这一节是写给 AI 的「行为约束」，人和 AI 都可以看。
 
-```text
-【模块说明】
-我现在正在开发 GlyphLoom 的核心库 `glyphloom_core`，它负责实现：
-- 文本抽取 / 适配（adapters / engines）
-- LLM 翻译（translators）
-- QA 校验（qa）
-- 流水线调度（core/pipeline.py）
+1. **遵守项目文档优先于你自己的习惯**  
+   - 任何时候，如果你的直觉和以下文档有冲突，以文档为准：  
+     - `docs/project_overview.md`  
+     - `docs/roadmap.md`  
+     - `docs/dev_workflow.md`  
+     - `docs/design_notes/scope_and_nongoals.md`  
+     - `docs/design_notes/platforms.md`  
+     - `docs/design_notes/config_and_secrets.md`  
 
-当前约束（请严格遵守）：
-1. 参考文档
-   - 请先根据本地仓库内容理解以下文件（如果你能访问它们的话）：
-     - `docs/project_overview.md`
-     - `docs/roadmap.md` 中当前 Stage 的描述
-     - `docs/design_notes/platforms.md`
-   - core 层不能依赖 GUI、PySide、Qt 等图形库。
+2. **Core 与 GUI 的边界**  
+   - `glyphloom_core` 是可被安装为库的核心模块：  
+     - 不允许依赖 GUI / PySide6；  
+     - 逻辑与 IO 分离，优先使用 logger，不随意 `print`。  
+   - `glyphloom_gui` 只负责界面与交互：  
+     - 不写业务流水线逻辑；  
+     - 通过 core 暴露的 API 调度 pipeline。
 
-2. 平台与依赖
-   - 代码必须在 Windows / Linux / macOS 三平台行为一致。
-   - 路径统一使用 `pathlib.Path`，不要自己拼字符串路径。
-   - 可以使用通用依赖（如 `pydantic`, `pandas`, `pyyaml`, `httpx`, `rich`），前提是它们在 `project_overview` 和 `pyproject` 规划里出现过。
+3. **语言与风格**  
+   - 代码：Python 3.12+，尽量使用 type hints、pydantic 等现代写法；  
+   - 注释与 docstring：可以使用中文说明关键逻辑，保证未来的我一眼能看明白；  
+   - commit message 与自动化脚本由仓库内现有规范负责，你只需要保证代码通过 `ruff/black/pytest`。
 
-3. 语言与注释
-   - 所有标识符使用英文。
-   - 使用中文 docstring / 中文注释解释关键逻辑，尤其是数据模型含义、pipeline 步骤。
+4. **小步、安全、可回滚**  
+   - 每次改动尽量集中在少量文件中；  
+   - 保持 `tests/` 能跑、CI 能通过；  
+   - 避免「顺手」大改没有在目标中声明的模块。
 
-4. 修改范围控制
-   - 本轮允许修改的文件仅限：
-     - （在这里列出你本次要动的文件，比如）
-       - `glyphloom_core/core/models.py`
-       - `glyphloom_core/core/config_loader.py`
-       - `glyphloom_core/core/pipeline.py`
-   - 不要重构其他模块、不要改变目录结构，如有必要请先说明理由。
-
-【本次具体任务】
-（在这里写清楚你要做的事情，例如：）
-
-- 根据 `docs/roadmap.md` Stage 0 的描述，在 `glyphloom_core/core/models.py` 中实现 `ProjectConfig` 的最小版本：
-  - 含 `schema_version: str` 字段；
-  - 含指向项目根目录 / 输入输出路径的基础配置字段；
-  - 使用 `pydantic.BaseModel`；
-  - 使用中文 docstring 描述此模型职责。
-
-请：
-1. 给出完整的新增 / 修改代码片段；
-2. 说明是否需要调整 `glyphloom_core/__init__.py` 或其他初始化文件；
-3. 设计一个最小的 pytest 用例示例（例如 `tests/test_project_config.py`），用来验证该模型可以正常构造。
-```
+5. **不要碰的东西（除非我明确说允许）**  
+   - 不要擅自修改：  
+     - `docs/dev_ai_assistant_prompts.md` 本文件；  
+     - 其它设计文档的宏观结构（除非我说要更新）；  
+     - 自动化脚本（`scripts/auto_commit.py` 等）和 GitHub Actions 工作流。  
+   - 发现现有文档/脚本有明显问题时，可以先给出「改进建议」，再等我确认是否允许你改。
 
 ---
 
-## 4. GUI 开发任务模板（glyphloom_gui）
+## 2. Stage 0 / Stage 1 的角色定位
 
-> 用于编写 / 修改 `glyphloom_gui`（PySide6 GUI）相关代码时使用。
+> 目前 Stage 0 已完成骨架：core/gui 目录结构、基本 pipeline、CLI/GUI 入口、最小测试与 CI。  
+> 现在进入 **Stage 1：模板闭环 + 云端 LLM（v0.1.x）**，你需要按 roadmap 来推进。
 
-```text
-【模块说明】
-我现在在开发 GlyphLoom 的 GUI 客户端 `glyphloom_gui`，职责是：
-- 提供桌面界面（项目列表、流水线运行、日志、QA 结果展示等）；
-- 调用 `glyphloom_core` 提供的 API 来执行实际流水线；
-- 处理多语言 UI（i18n）与基础主题设置。
+### 2.1 Stage 1 的目标（给 AI 的简写版）
 
-重要边界：
-1. GUI 不实现业务逻辑：
-   - 任何与「抽取文本、调用 LLM、执行 QA」相关的业务判断，都应该发生在 core 层。
-   - GUI 只负责：
-     - 收集用户输入（选路径、配配置）；
-     - 调用 core 的公开接口；
-     - 显示进度 / 结果。
+参考 `docs/roadmap.md` 中 Stage 1：  
 
-2. 结构约定（参照 `docs/project_overview.md`）：
-   - `glyphloom_gui/main.py`：入口。
-   - `glyphloom_gui/app.py`：QApplication 封装。
-   - `glyphloom_gui/widgets/`：界面组件（如 MainWindow）。
-   - `glyphloom_gui/viewmodels/`：状态与 core 的交互桥梁。
-   - `glyphloom_gui/i18n/`：多语言 JSON 文案。
+- 打通 “Excel 模板 → LLM 翻译 → Excel 输出” 的最小闭环；  
+- 实现 TableAdapter 基本读写模型（读取 Excel/CSV、写出翻译列、QA 列占位）；  
+- 实现 OpenAI HTTP Translator 的最小调用（可以是假翻译 / echo，后续再接真实 LLM）；  
+- 提供最小 CLI & GUI 入口能驱动这条流水线。
 
-3. 语言与注释
-   - 回答用简体中文。
-   - 代码标识符用英文，注释 / docstring 用中文说明控件作用与交互逻辑。
+你的任务是：  
 
-4. 修改范围控制
-   - 本轮允许修改的文件仅限：
-     - （列出本次要动的 GUI 文件）
-       - `glyphloom_gui/main.py`
-       - `glyphloom_gui/app.py`
-       - `glyphloom_gui/widgets/main_window.py`
-   - 不要在 GUI 中直接访问文件系统做复杂逻辑（可以调用 core 层封装好的接口）。
-
-【本次具体任务】
-（在这里写你想让它做什么，例如：）
-
-- 实现 Stage 0 要求的 GUI 空壳：
-  - `python -m glyphloom_gui` 时弹出一个主窗口；
-  - 标题为 `GlyphLoom · 字织机（Stage 0）`；
-  - 中央区域可以先放一个简单的标签，显示当前版本号占位文本。
-
-请：
-1. 给出上述文件的新增 / 修改代码；
-2. 保持结构清晰，使用中文注释解释关键构造；
-3. 若需要新增依赖或资源文件，请明确说明路径和用途。
-```
+- **先提出 Stage 1 的子任务拆分与文件改动建议**；  
+- 再按照我选择的子任务，一步一步落地实现。
 
 ---
 
-## 5. Scripts / 自动化开发任务模板（scripts）
+## 3. Stage 1：设计优先的协作流程（给人 + AI）
 
-> 用于维护 `scripts/auto_commit.py`、`scripts/dev_setup.ps1`、`scripts/check_quality.ps1` 等脚本时使用。
+### 3.1 第一步：只做「设计 / 拆任务」，不写代码
 
-```text
-【模块说明】
-我现在在维护 GlyphLoom 的开发工具脚本（`scripts/` 目录），包括：
-- `dev_setup.ps1`：开发环境初始化；
-- `check_quality.ps1`：统一运行 ruff / black / pytest；
-- `auto_commit.py`：自动生成中英双语 commit message，并在递增 VERSION 前执行质量检查；
-- `watch_and_commit.ps1`：Windows 文件变动监听器，触发 auto_commit。
+当我准备开始 Stage 1 时，我会发出类似下面的指令（这是模板，未来我可以直接复制用）：
 
-约束条件：
-1. 这些脚本是开发体验的核心部分，不允许：
-   - 移除质量检查（ruff / black / pytest）；
-   - 在未经说明的前提下大幅改变参数约定或输出格式。
-2. 语言与注释：
-   - 对脚本行为的说明请用中文；
-   - 变量 / 函数名建议用英文；
-   - 对复杂逻辑（如 diff 解析、去抖逻辑）写中文注释。
-3. 平台策略：
-   - `.ps1` 可以是 【Windows-only】；
-   - Python 脚本应尽量保持跨平台，但 dev tools 出问题不会影响 core / GUI 的运行。
+记得遵守 `docs/dev_ai_assistant_prompts.md` 和其它设计文档的规则。
 
-【本次具体任务】
-（在这里写你要它做什么，比如：）
+现在我们要进入 `docs/roadmap.md` 里的 Stage 1（模板闭环 + 云端 LLM）。
 
-- 在 `scripts/auto_commit.py` 中增加一个可选的 `--dry-run` 参数：
-  - 功能：只生成 commit message 并打印到终端，不执行 `git add` / `git commit` / 版本号修改。
-  - 要求：
-    - 默认行为不变；
-    - dry-run 模式下仍执行质量检查；
-    - 终端输出中英文说明，告诉用户这是模拟模式。
+这一步「只做设计，不写代码」，请你：
 
-请：
-1. 给出 `auto_commit.py` 的修改代码；
-2. 用中文解释新增参数的行为与使用场景；
-3. 如果需要更新 `README.md` 或 `docs/dev_workflow.md`，请给出相应补充说明文案。
-```
+1. 基于 roadmap 的 Stage 1 描述，将本阶段拆成 3～6 个子任务（按 “1.1, 1.2, 1.3 …” 编号）；
+2. 对每个子任务，列出：
+   - 需要修改的文件路径列表（以仓库根目录为基准），
+   - 每个文件准备新增或修改哪些类 / 函数 / 流程，用一行说明目的；
+3. 标明建议的实现顺序（先做哪个子任务、哪个可以延后）。
+
+要求：
+- 此轮完全不要写任何代码实现；
+- 暂时不要新增 tests 以外的文件；
+- 保证每个子任务修改的文件数量尽量少（建议不超过 3 个文件）。
+
+AI 回答后，我只需要做「选择题」：
+
+- 哪些子任务命名合适；
+- 有无越权修改的文件（比如动 GUI 或脚本）；
+- 确定先做哪一个（例如 “先做 1.1 TableAdapter 读写”）。
 
 ---
 
-## 6. 重构 / 结构调整任务模板
+## 4. Stage 1：实现子任务的通用模板
 
-> 当你真的需要 AI 帮忙做「重构代码结构 / 修改设计」时，建议单独开一个会话，并使用更严格的模板。
+当设计确认后，每个子任务就用下面的模板来落地实现。
 
-```text
-【背景】
-我现在考虑对 GlyphLoom 的部分结构做重构（例如 pipeline 拆分、config 模型调整等）。
+### 4.1 实现类/函数的模板
 
-在进行任何重构前，请你先：
-1. 阅读并总结以下文档中与本次重构相关的部分：
-   - `docs/project_overview.md`
-   - `docs/roadmap.md`
-   - `docs/design_notes/scope_and_nongoals.md`
-   - `docs/design_notes/platforms.md`
+记得遵守 `docs/dev_ai_assistant_prompts.md` 和你刚刚输出的 Stage 1 设计清单。
 
-2. 用简体中文给出一段总结，包括：
-   - 当前设计的意图；
-   - 你认为存在的问题（如果有）；
-   - 重构的潜在风险点。
+现在只实现你设计里的「1.1 子任务」（例如：TableAdapter 基础读写）。
 
-【本次重构目标】
-（在这里非常明确地写出你想要达到的效果，例如：）
+本次任务的目标：
+- （简要重复 AI 自己设计里 1.1 子任务的目标）
 
-- 将 `core/pipeline.py` 里的单一大函数拆分成多个可测试的步骤函数，同时保留：
-  - CLI / GUI 调用接口不变；
-  - config 加载逻辑不变；
-  - 日志行为不变。
+允许修改的文件：
+- glyphloom_core/adapters/base.py
+- glyphloom_core/adapters/table_adapter.py
+- tests/test_table_adapter.py
 
-【约束】
-- 重构应尽量保持对外 API 不变；
-- 如需改动已有公共接口，请先用中文列出改动清单和影响范围，再开始写代码；
-- 所有重构后代码必须：
-  - 通过 `scripts/check_quality.ps1`；
-  - 保持 pytest 测试通过；
-  - 不破坏多平台策略（参照 platforms.md）。
+严格限制：
+- 只允许修改以上文件；
+- 不要新建其它模块或文件；
+- 不要修改 docs/、scripts/、CI 配置。
 
-请先输出：
-1. 你对现状的理解（中文概述）；
-2. 一份重构方案草稿（中文要点列表）；
-3. 再根据我确认的方案，分步骤给出具体代码改动。
-```
+请按以下步骤输出结果：
+1. 先简要回顾你在「1.1 子任务设计」中对这三个文件的计划（用 3～5 条说明）；
+2. 然后给出修改后的完整代码块（每个文件一个代码块，标明路径）；
+3. 最后给出本地验证步骤，例如：
+   - 要运行的 pytest 命令；
+   - 如果有示例 Excel，可以说明放在哪个目录、如何运行。
 
----
+请在关键逻辑处添加中文注释，方便我之后阅读和二次调整。
 
-## 7. 使用建议（给未来的你）
+### 4.2 自我 review 模板（让 AI 自己找坑）
 
-1. **不要把所有任务都交给 AI 一次性做完**  
-   - 尤其是 core / pipeline / config 这些核心模块，尽量按 Roadmap 一小块一小块推进。
-2. **关键决策 / 重构一定要先讨论思路**  
-   - 可以让 AI 先总结现状 + 给方案，再由你拍板哪个方案能接受，然后才写代码。
-3. **遇到「它想帮你大改架构」时，要敢说不**  
-   - 可以明确回复：  
-     > 现在不做结构性重构，请只在现有结构内补功能 / 修 bug。
-3. **把「写中文注释」当作强制要求**  
-   - 如果 AI 给的代码缺注释，直接让它补一句：  
-     > 请在关键逻辑附近加上中文注释，说明设计意图和使用方式。
+实现提交后，再发一个附加指令，让它先自查：
+
+请对你刚刚提交的改动做一次自我 review，回答以下问题：
+
+1. 列出你最担心的 3 个潜在问题或边界情况（例如：空表、列名缺失、大文件性能等）；
+2. 说明还缺哪些测试用例（按「优先级高/中/低」简单分级）；
+3. 检查是否有任何地方可能违反：
+   - core 与 gui 的边界；
+   - `docs/roadmap.md` 中 Stage 1 的设计意图；
+   - `docs/design_notes/platforms.md` 的多平台约束。
+
+只需要文字说明，不需要再贴代码。
+
+我只需要在这个基础上再看一眼 diff / pytest 报告，有问题就再缩小范围重新让它改。
 
 ---
 
-> 这份文件本身可以视为「AI 协作的设计文档」。  
-> 之后如果你发现某些习惯或约束需要调整，可以随时更新本文件，并让新的 AI 会话先阅读它。
+## 5. 针对 Codex / VSCode 集成的特别提醒
+
+> 如果你是在 VSCode 里用 Copilot Chat / 类似「在当前仓库上下文」的 AI：
+
+1. 第一条消息一定要是「0.1 全局启动咒语」，让它先读文档；  
+2. 之后的所有任务，都尽量说明「允许修改的文件列表」，避免它乱动；  
+3. 如果我觉得生成代码量太大、超出我能 review 的范围，就把子任务拆得更细一些（比如只改一个文件）。
+
+---
+
+## 6. 总结（给未来的我）
+
+- 这份文件的核心作用是：  
+  - **把「怎么用 AI」这件事标准化**；  
+  - 让 AI 自己负责设计和拆任务，你负责选子任务和验收结果；  
+  - 用「允许修改的文件」这条红线，防止它乱改。
+
+- Stage 1 之后，等我们开始做引擎探测 / Ren’Py miner / 插件系统，还可以在本文件底部继续加专用模板，照着这个模式扩展就行。
+
+> 记住一点就够：  
+> **新会话先读文档、每个子任务都要写文件白名单。**  
+> 剩下的，就让 AI 多干点活。

@@ -82,41 +82,45 @@
 
 ---
 
-## 2. Stage 0 · 项目骨架 & 工程环境（`v0.0.x`）
+## 2. Stage 0 · 项目骨架 & 工程环境（0.0.x）
+
+当前状态：✅ Stage 0 骨架已完成（v0.0.x），core / GUI / 自动化均可运行。
 
 ### 2.1 目标
 
-- 建立 core / gui 基础目录与模块
+- 建立 core / gui 的基础目录结构
 - 实现“假翻译”的最小 pipeline
 - GUI 能正常启动（空壳即可）
 
-### 2.2 核心任务
+### 2.2 任务列表
 
 #### 2.2.1 Core 骨架
 
-- [ ] `glyphloom_core/__init__.py`
-- [ ] `core/models.py`：`Line`、`ProjectConfig`、`SourceConfig`
-- [ ] `core/config_loader.py`：读取 YAML
-- [ ] `core/pipeline.py`：`run_project(config)`（可先只打印日志）
-- [ ] `adapters/base.py`：定义 adapter 接口
+- [x] glyphloom_core/__init__.py
+- [x] core/models.py：ProjectConfig、SourceConfig、PipelineResult（pydantic + dataclass）
+- [x] core/config_loader.py：读取 YAML/默认配置并返回 ProjectConfig
+- [x] core/pipeline.py：实现 
+un_project(config)，输出 summary
+- [x] glyphloom_core/cli.py + __main__：python -m glyphloom_core 可运行
 
 #### 2.2.2 GUI 骨架
 
-- [ ] `glyphloom_gui/main.py`：入口
-- [ ] `glyphloom_gui/app.py`：封装 QApplication
-- [ ] `widgets/main_window.py`：最简窗口（命名与《project_overview》保持一致）
-- [ ] CLI：`python -m glyphloom_gui`
+- [x] glyphloom_gui/main.py：入口
+- [x] glyphloom_gui/app.py：封装 QApplication
+- [x] widgets/main_window.py：最简窗口
+- [x] glyphloom_gui/__main__.py：python -m glyphloom_gui 可运行
 
-#### 2.2.3 文档
+#### 2.2.3 文档与自动化
 
-- [ ] `docs/project_overview.md`
-- [ ] `docs/roadmap.md`
-- [ ] README：写明项目状态（WIP）
+- [x] docs/project_overview.md / docs/roadmap.md / README（记录 Stage 0 状态）
+- [x] pyproject.toml（依赖、extras、entry points）
+- [x] 自动化脚本：scripts/dev_setup.ps1、scripts/check_quality.ps1、scripts/auto_commit.py
+- [x] 基础测试：	ests/test_pipeline.py + CI
 
-### 2.3 验收
+### 2.3 验收标准
 
-- `python -m glyphloom_gui` 弹出标题为“字织机 / GlyphLoom”的窗口  
-- `python -m glyphloom_core` 输出 demo 日志
+- python -m glyphloom_gui 弹出标题为“字织机 / GlyphLoom”的窗口
+- python -m glyphloom_core 输出 demo 日志并生成 summary
 
 ---
 
