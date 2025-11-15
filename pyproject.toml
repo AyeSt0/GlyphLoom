@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glyphloom"
+version = "0.0.0"
+description = "GlyphLoom localization toolkit (alpha)."
+readme = "README.md"
+authors = [{ name = "GlyphLoom Authors" }]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.4",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.1.0", "black>=23.0", "pytest>=7.0"]
+gui = ["PySide6>=6.6"]
+
+[project.scripts]
+glyphloom-core = "glyphloom_core.cli:main"
+glyphloom-gui = "glyphloom_gui.main:main"
+
+[tool.setuptools.packages.find]
+include = ["glyphloom_core*", "glyphloom_gui*"]

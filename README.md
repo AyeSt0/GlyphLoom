@@ -19,7 +19,12 @@ pwsh -ExecutionPolicy Bypass -File scripts/watch_and_commit.ps1
 
 # 3. 手动运行质量检查（ruff + black --check + pytest）
 pwsh -ExecutionPolicy Bypass -File scripts/check_quality.ps1
-```
+
+# 4. 运行 Stage 0 核心 / GUI 骨架
+python -m glyphloom_core.cli --dry-run
+python -m glyphloom_core.cli --config path/to/config.yaml
+python -m glyphloom_gui.main  # 需先安装 pip install .[gui]
+``
 
 > `auto_commit.py` 会在 bump VERSION 之前自动执行质量检查；若需临时跳过，可设置 `GL_SKIP_QUALITY=1`。
 
