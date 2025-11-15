@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 def _default_source_path() -> Path:
@@ -25,14 +25,57 @@ class SourceConfig(BaseModel):
     encoding: str = "utf-8"
 
 
+class TableAdapterConfig(BaseModel):
+    """TableAdapter 相关的配置，例如 sheet 与列名。"""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    sheet_name: str | None = None
+    source_column: str = "source_text"
+    translation_column: str = "translation"
+    status_column: str = "status"
+    qa_flags_column: str = "qa_flags"
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def column_mapping(self) -> Dict[str, str]:
+        """方便 pipeline/adapter 做列名映射。"""
+
+        return {
+            "source": self.source_column,
+            "translation": self.translation_column,
+            "status": self.status_column,
+            "qa_flags": self.qa_flags_column,
+        }
+
+
+class TranslatorConfig(BaseModel):
+    """Translator 相关配置（Stage 1 仅支持最基础字段）。"""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    provider: str = "openai"
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-4o-mini"
+    api_key_env: str = "OPENAI_API_KEY"
+    temperature: float = 0.3
+    max_tokens: int = 1024
+
+
 class ProjectConfig(BaseModel):
     """项目级配置，记录 schema 版本、输出目录等。"""
 
-    model_config = ConfigDict(validate_assignment=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+        extra="forbid",
+    )
 
     name: str = "GlyphLoom Demo Project"
     source: SourceConfig = Field(default_factory=SourceConfig)
-    output_dir: Path = Field(default=Path("output"))
+    table_adapter: TableAdapterConfig = Field(default_factory=TableAdapterConfig)
+    translator: TranslatorConfig = Field(default_factory=TranslatorConfig)
+    output_dir: Path = Field(default_factory=lambda: Path("output"))
     metadata: Dict[str, Any] = Field(default_factory=dict)
     schema_version: str = "0.0"
 
