@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
+from glyphloom_core.qa.base import QAResult
 
 
 def _default_source_path() -> Path:
@@ -97,6 +98,7 @@ class PipelineResult:
     steps: List[PipelineStep]
     output_dir: Path
     created_files: List[Path] = field(default_factory=list)
+    qa_result: Optional[QAResult] = None
 
     @property
     def success(self) -> bool:
