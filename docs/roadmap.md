@@ -160,9 +160,9 @@ un_project(config)，输出 summary
 
 #### GUI 模板项目
 
-- [ ] 向导创建 Excel 项目
-- [ ] 表单填写 LLM 配置
-- [ ] 运行 pipeline 并展示日志/结果
+- [x] 向导创建 Excel 项目
+- [x] 表单填写 LLM 配置
+- [x] 运行 pipeline 并展示日志/结果
 
 ### 3.3 验收
 

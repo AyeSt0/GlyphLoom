@@ -1,8 +1,8 @@
 # GlyphLoom 当前进度快照（Stage 1）
 
-> 本文件用于让人类/AI 进入项目时，快速了解：做到哪了、还能做什么。
+> 便于人类/AI 快速了解：做到哪了、还能做什么。
 
-最后更新：请填写日期（例如：2025-11-16）
+最后更新：2025-11-16
 
 ---
 
@@ -14,7 +14,7 @@
   - ✅ 1.2 TableAdapter 数据读写骨架
   - ✅ 1.3 OpenAI HTTP Translator 最小实现（假翻译）
   - ✅ 1.4 Pipeline/CLI 模板闭环整合
-  - ⏳ 1.5 GUI 模板项目向导（尚未开始）
+  - ✅ 1.5 GUI 模板项目向导（含 1.5.x 异步/体验优化）
 
 ---
 
@@ -23,117 +23,81 @@
 ### 2.1 配置模型与加载（1.1）
 
 - `glyphloom_core/core/models.py`
-  - 已定义：`ProjectConfig` / `SourceConfig` / `TableAdapterConfig` / `TranslatorConfig`
-  - `ProjectConfig` 设置：
-    - `extra = "forbid"`，防止 YAML 出现未知字段
-    - `output_dir` 使用 `default_factory=lambda: Path("output")`
+  - 定义：`ProjectConfig` / `SourceConfig` / `TableAdapterConfig` / `TranslatorConfig`
+  - `ProjectConfig`：`extra="forbid"`；`output_dir` 使用 `default_factory=lambda: Path("output")`
 - `glyphloom_core/core/config_loader.py`
-  - 能解析 YAML：
-    - `project.source`
-    - `project.table_adapter`
-    - `project.translator`
-  - 并合并默认值
+  - 解析 YAML：`project.source` / `project.table_adapter` / `project.translator`，并合并默认值
 
 ### 2.2 TableAdapter（1.2）
 
-- `glyphloom_core/adapters/base.py`
-  - 定义 `BaseAdapter` 抽象基类
-  - 内部维护 `_data: pd.DataFrame`
-  - 提供只读属性 `data` 供上层安全访问
-- `glyphloom_core/adapters/table_adapter.py`
-  - 支持：
-    - 按 `SourceConfig.path` 读取 Excel/CSV（支持 `sheet_name`）
-    - CSV 读取使用 `SourceConfig.encoding`
-    - 校验 `TableAdapterConfig.source_column` 存在，否则抛 `ValueError`（含文件路径）
-    - 根据 `TableAdapterConfig.column_mapping` 自动补齐：
-      - `translation`
-      - `status`
-      - `qa_flags`
-  - `save(output_path)`：
-    - `.xlsx/.xls` → `to_excel(index=False)`
-    - `.csv` → `to_csv(index=False)`
-- `tests/test_table_adapter.py`
-  - 使用 examples 模板文件完成“读取 → 补列 → 导出”闭环
-  - 断言所有需要的列存在
+- `glyphloom_core/adapters/base.py`：抽象基类，内部 `_data` + 只读属性 `data`
+- `glyphloom_core/adapters/table_adapter.py`：
+  - 读取 Excel/CSV（支持 `sheet_name`，CSV 使用 `encoding`）
+  - 校验 `source_column`，缺失抛 `ValueError`（含文件路径）
+  - 补齐列：`translation` / `status` / `qa_flags`
+  - 保存为 Excel/CSV（复用输入文件名）
+- `tests/test_table_adapter.py`：验证“读取 → 补列 → 导出”闭环
 
 ### 2.3 Translator（OpenAI HTTP）（1.3）
 
-- `glyphloom_core/translators/base.py`
-  - 定义 `BaseTranslator`
-    - 构造函数保存 `TranslatorConfig`
-    - 抽象方法 `translate_batch(self, texts: list[str]) -> list[str]`
-- `glyphloom_core/translators/openai_http.py`
-  - 定义 `OpenAIHttpTranslator(BaseTranslator)`
-    - 从 `TranslatorConfig` 读取 `provider`/`model`/`base_url`/`api_key_env`
-    - 当前为「假翻译」：`translate_batch` 为每条文本加前缀 `"[{provider}:{model}] " + text`，不访问网络
-    - TODO：后续可接入 `glyphloom_core.core.secrets.get()` 统一加载密钥
-- `tests/test_translator_openai_http.py`
-  - 手动构造 `TranslatorConfig`
-  - 调用 `translate_batch(["你好", "世界"])`
-  - 断言长度一致且带 `[provider:model]` 前缀
+- `glyphloom_core/translators/base.py`：抽象 `BaseTranslator`
+- `glyphloom_core/translators/openai_http.py`：
+  - 假翻译：`translate_batch` 为每行添加 `[provider:model]` 前缀，不访问网络
+  - 从 `TranslatorConfig` 读取 `provider`/`model`/`base_url`/`api_key_env`
+- `tests/test_translator_openai_http.py`：长度一致、前缀校验
 
 ### 2.4 Pipeline & CLI 闭环（1.4）
 
-- `glyphloom_core/core/pipeline.py`
-  - 对外入口：`run_project(config: ProjectConfig) -> PipelineResult`
-  - 阶段函数：
-    - `_run_extract(config)`：构造 `TableAdapter`，`load()` + `ensure_columns()`，日志记录列数
-    - `_run_translate(adapter, config)`：从 `adapter.data` 读取 `source_column`，用 `OpenAIHttpTranslator` 假翻译并写入 `translation_column`，校验数量一致
-    - `_run_export(adapter, config)`：确保 `output_dir` 存在，输出文件名沿用源文件名，调用 `adapter.save` 并返回路径
-  - `_run_stage(...)`：统一计时 & 日志，异常也会在 `PipelineStep` 中记录 `succeeded` 和耗时
-- `glyphloom_core/cli.py`
-  - `build_parser()`：子命令仅支持 `"translate"`（默认）；`-c/--config` 指定 YAML；`--dry-run` 只加载配置
-  - `main(...)`：加载配置并输出项目信息；`dry-run` 直接退出；`translate` 时调用 `run_project`，输出 success/failed 与产物列表
-- `tests/test_pipeline.py`
-  - 使用默认 `load_project_config()`，将 `output_dir` 指向 pytest 的 `tmp_path`
-  - 断言：
-    - `result.success` 为 True
-    - 输出目录与产物存在
-    - 读取输出文件后，`translation` 列存在且行数匹配，首行带 `[provider:model]` 前缀
-  - 说明：当前 Pipeline 使用假翻译（前缀 echo），无网络依赖
+- `glyphloom_core/core/pipeline.py`：
+  - `run_project` 串联 `extract -> translate -> export`
+  - `_run_stage` 记录耗时/成功；`PipelineResult` 返回 `created_files`
+  - 翻译阶段校验行数一致，写入 `translation` 列
+- `glyphloom_core/cli.py`：
+  - 子命令：`translate`（默认）
+  - 参数：`-c/--config`、`--dry-run`
+  - 调用 `run_project`，输出 success/failed 与产物列表
+- `tests/test_pipeline.py`：默认配置下跑假翻译，校验 translation 列前缀与行数
+
+### 2.5 GUI 模板项目向导（1.5 + 1.5.x 体验优化）
+
+- `glyphloom_gui/widgets/main_window.py`：按钮/菜单/工具栏入口 → 项目向导
+- `glyphloom_gui/widgets/project_wizard.py`：
+  - 表单：源文件浏览、输出目录浏览（可留空）、LLM 配置（provider/model/api_key_env 默认取配置）
+  - 配置构造：基于 `load_project_config()`，仅覆盖 `source.path` / `output_dir` / `translator`
+  - 执行：QThread 后台调用 `run_project`，避免 UI 卡顿；状态提示“正在执行，请稍候…”
+  - 体验：会话内记住上次源/输出目录；FileNotFoundError/ValueError 提示友好检查点
+  - 结果：成功弹窗列出输出目录/文件与 PipelineStep 描述；异常弹窗提示错误
 
 ---
 
 ## 3. 尚未完成 / 下一步计划
 
-### 3.1 Stage 1.5 GUI 模板项目向导（未完成）
-
-计划目标（尚未实现）：
-
-- 在 `glyphloom_gui` 中增加“新建 Excel 本地化项目”入口
-- 配置向导：
-  - 选择 Excel/CSV 源文件
-  - 配置输出目录
-  - 填写 LLM 配置（provider/model/api_key_env 等，可带默认值）
-- 点击“开始翻译”后：
-  - 基于用户输入构造 ProjectConfig
-  - 调用 `core.pipeline.run_project(config)`
-  - 在 GUI 展示执行结果（成功/失败、输出文件路径、各阶段状态）
-
-当前状态：**尚未开始实现 GUI 部分**
+- 转向 Stage 2：占位符识别 + 基础 QA
+- 后续 GUI 可再迭代（进度条/日志面板/多任务队列）放入 Stage 2+ 规划
 
 ---
 
 ## 4. 快速验证与命令
 
-- 运行最小闭环（假翻译）：`python -m glyphloom_core.cli translate --config examples/config.yaml`
-- 运行测试：`python -m pytest`
+- CLI 假翻译：`python -m glyphloom_core.cli translate --config examples/config.yaml`
+- GUI 向导：`python -m glyphloom_gui`，选择 `examples/template_basic.xlsx`，点击“开始翻译”
+- 测试：`python -m pytest`
 
 ---
 
 ## 5. 对未来会话的使用说明
 
-当你在新的对话窗口加载本项目时，可以：
+在新对话加载本项目时：
 
-1. 上传以下文件：
+1. 提供关键文件：
    - `docs/project_overview.md`
    - `docs/roadmap.md`
    - `docs/dev_ai_assistant_prompts.md`
    - `docs/design_notes/scope_and_nongoals.md`
-   - 本文件：`docs/current_status.md`
-2. 告诉 AI：
-   - “你是 GlyphLoom 的 PM + 指令工程师 + Reviewer，不写代码，只帮我写 Codex 子任务指令、做代码 review、并同步 roadmap。”
-3. 继续从当前的 Stage 1.5 或之后的 Stage 开发。
+   - `docs/current_status.md`
+2. 说明角色：
+   - “你是 GlyphLoom 的 PM + 指令工程师 + Reviewer，不写代码，只帮我写 Codex 子任务指令、做代码 review、同步 roadmap。”
+3. 继续从当前阶段（Stage 2 起）推进。
 
 ---
 
@@ -179,7 +143,8 @@ glyphloom_core/              # 核心逻辑（CLI/Adapter/Translator/Pipeline）
 glyphloom_gui/               # GUI 壳层（不含业务逻辑）
   widgets/
     __init__.py
-    main_window.py           # 主窗口
+    main_window.py           # 主窗口（入口按钮/菜单）
+    project_wizard.py        # 项目向导对话框
   __init__.py
   __main__.py                # 支持 python -m glyphloom_gui
   app.py                     # QApplication 封装
