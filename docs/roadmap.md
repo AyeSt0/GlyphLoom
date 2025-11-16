@@ -154,9 +154,9 @@ un_project(config)，输出 summary
 
 #### Pipeline（最小闭环）
 
-- [ ] 提取（TableAdapter）→ 翻译 → 导出
-- [ ] 日志 & 进度 hook
-- [ ] CLI：`python -m glyphloom_core.cli translate --config config.yaml`（或提供 `glyphloom-core` 命令）
+- [x] 提取（TableAdapter）→ 翻译 → 导出
+- [x] 日志 & 进度 hook
+- [x] CLI：`python -m glyphloom_core.cli translate --config config.yaml`（或提供 `glyphloom-core` 命令）
 
 #### GUI 模板项目
 

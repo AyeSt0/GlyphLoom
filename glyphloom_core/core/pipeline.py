@@ -83,7 +83,7 @@ def _run_extract(config: ProjectConfig) -> TableAdapter:
     logger.info(
         "已加载源表 %s ，列数 %d",
         config.source.path,
-        adapter._require_data().shape[1],  # noqa: SLF001 仅用于读取 DataFrame 维度
+        adapter.data.shape[1],  # 仅用于读取 DataFrame 维度
     )
     return adapter
 
@@ -91,7 +91,7 @@ def _run_extract(config: ProjectConfig) -> TableAdapter:
 def _run_translate(adapter: TableAdapter, config: ProjectConfig) -> None:
     """翻译阶段：调用 Translator 批量翻译源文本，并写回 translation 列。"""
 
-    df = adapter._require_data()  # noqa: SLF001 直接复用适配器内部 DataFrame
+    df = adapter.data  # 直接复用适配器内部 DataFrame
     source_column = config.table_adapter.source_column
     translation_column = config.table_adapter.translation_column
 

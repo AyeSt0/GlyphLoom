@@ -37,3 +37,9 @@ class BaseAdapter(ABC):
         if self._data is None:
             raise RuntimeError("尚未加载数据，请先调用 load()")
         return self._data
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """只读访问内部 DataFrame，供 pipeline 等上层读取。"""
+
+        return self._require_data()
