@@ -62,6 +62,14 @@
 
 代码里请使用中文注释解释关键逻辑。
 
+---
+
+### 0.3 「Roadmap 同步子任务」通用模板
+
+现在请你同步更新 docs/roadmap.md：根据你刚刚完成并通过测试的子任务，自动识别对应的 Roadmap checklist 条目并将其从 [ ] 改为 [x]。不要修改任何文案或其它条目。请严格遵守 dev_ai_assistant_prompts.md：只允许修改 docs/roadmap.md。输出流程：分析你准备勾选的条目 → 给出修改后的 roadmap → 给出本地验证方式。
+
+---
+
 **如果是只读不改的任务（例如 review / 讲解）：**
 
 记得遵守 `docs/dev_ai_assistant_prompts.md` 里的规则。

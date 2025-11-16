@@ -136,21 +136,21 @@ un_project(config)，输出 summary
 
 #### 数据模型 & 配置
 
-- [ ] 补齐 `Line` / `ProjectConfig` / `TranslatorConfig`（必要时扩展 SheetResult 等统计模型）
-- [ ] `config_loader` 支持合并 CLI / GUI 配置
-- [ ] 可选 `validators.py`（通用校验）
+- [x] 补齐 `Line` / `ProjectConfig` / `TranslatorConfig`（必要时扩展 SheetResult 等统计模型）
+- [x] `config_loader` 支持合并 CLI / GUI 配置
+- [x] 可选 `validators.py`（通用校验）
 
 #### TableAdapter
 
-- [ ] 读取 Excel/CSV，列映射（原文/译文/备注/上下文）
-- [ ] 导出列：`translation`、`status`、`qa_flags`
-- [ ] 支持多 sheet
+- [x] 读取 Excel/CSV，列映射（原文/译文/备注/上下文）
+- [x] 导出列：`translation`、`status`、`qa_flags`
+- [x] 支持多 sheet
 
 #### Translator（OpenAI HTTP）
 
-- [ ] `openai_http.py`：chat/completion 封装
-- [ ] 配置：`api_key`、`model`、`base_url`、`temperature`、`max_tokens`
-- [ ] 支持批量请求、节流、prompt 模板
+- [x] `openai_http.py`：chat/completion 封装
+- [x] 配置：`api_key`、`model`、`base_url`、`temperature`、`max_tokens`
+- [x] 支持批量请求、节流、prompt 模板
 
 #### Pipeline（最小闭环）
 
