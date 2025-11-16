@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from glyphloom_core.core.config_loader import load_project_config
-from glyphloom_core.core.models import ProjectConfig
+from glyphloom_core.core.models import PipelineResult, ProjectConfig
 from glyphloom_core.core.pipeline import run_project
 
 # 记忆用户最近选择的路径，提升后续体验（不持久化到文件，只在会话内记忆）
@@ -32,8 +32,8 @@ _LAST_OUTPUT_DIR: Optional[Path] = None
 class _PipelineWorker(QThread):
     """后台线程执行 pipeline，避免阻塞 UI。"""
 
-    success = Signal(object)  # PipelineResult
-    error = Signal(object)  # Exception
+    success = Signal(PipelineResult)
+    error = Signal(Exception)
 
     def __init__(self, config: ProjectConfig) -> None:
         super().__init__()
