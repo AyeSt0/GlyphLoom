@@ -1,24 +1,25 @@
-# GlyphLoom 当前进度快照（Stage 1）
-
+# GlyphLoom 当前进度快照（Stage 2）
+ 
 > 便于人类/AI 快速了解：做到哪了、还能做什么。
-
+ 
 最后更新：2025-11-16
 
 ---
 
 ## 1. 当前所处阶段
-
-- 当前大阶段：**Stage 1（模板闭环 + 云端 LLM）**
-- 子任务完成情况：
-  - ✅ 1.1 配置模型与加载扩展
-  - ✅ 1.2 TableAdapter 数据读写骨架
-  - ✅ 1.3 OpenAI HTTP Translator 最小实现（假翻译）
-  - ✅ 1.4 Pipeline/CLI 模板闭环整合
-  - ✅ 1.5 GUI 模板项目向导（含 1.5.x 异步/体验优化）
+ 
+- 当前大阶段：**Stage 2（占位符识别 & 基础 QA）**
+- Stage 1 回顾：1.1~1.5 已全部完成（配置/Adapter/Translator/Pipeline/GUI）
+- Stage 2 进展：
+  - ✅ 2.1 占位符提取：解析器 + 动态模式注册，支持多括号/嵌套/空格
+  - ⏳ 2.2 QA 结果模型与框架：待实现
+  - ⏳ 2.3 占位符一致性规则：待实现
+  - ⏳ 2.4 QA 导出与集成：待实现
+  - ⏳ 2.5 CLI/配置 QA 开关：待实现
 
 ---
 
-## 2. 已完成内容摘录
+## 2. 已完成内容摘录（含 Stage 1 全量 + Stage 2.1 占位符提取）
 
 ### 2.1 配置模型与加载（1.1）
 
@@ -71,9 +72,9 @@
 ---
 
 ## 3. 尚未完成 / 下一步计划
-
-- 转向 Stage 2：占位符识别 + 基础 QA
-- 后续 GUI 可再迭代（进度条/日志面板/多任务队列）放入 Stage 2+ 规划
+ 
+- Stage 2 余项：QA 结果模型/框架、占位符一致性规则、QA 导出集成、CLI/配置 QA 开关
+- 后续可选优化：GUI 进度/日志面板、多任务队列，待 Stage 2 主线完成后再排期
 
 ---
 
@@ -170,3 +171,17 @@ pyproject.toml               # 项目/依赖配置
 README.md                    # 项目门面说明
 VERSION                      # 版本号记录
 ```
+- `glyphloom_gui/widgets/project_wizard.py`：
+  - 表单：源文件浏览、输出目录浏览（可留空）、LLM 配置（provider/model/api_key_env 默认取配置）
+  - 配置构造：基于 `load_project_config()`，仅覆盖 `source.path` / `output_dir` / `translator`
+  - 执行：QThread 后台调用 `run_project`，避免 UI 卡顿；状态提示“正在执行，请稍候…”
+  - 体验：会话内记住上次源/输出目录；FileNotFoundError/ValueError 提示友好检查点
+  - 结果：成功弹窗列出输出目录/文件与 PipelineStep 描述；异常弹窗提示错误
+
+### 2.6 占位符提取（2.1）
+
+- `glyphloom_core/qa/placeholders.py`：
+  - 栈解析括号占位符，支持 `{}` / `{{}}` / `[]` / `[[]]` / `()` / `(( ))` / `< >`，可包含空格、嵌套
+  - 动态模式注册：默认支持 `%s`、`%(name)s`、`${ENV}`，可通过 register_placeholder_pattern(s) 注入新模式
+  - 接口：`extract_placeholders` 保持不变（白名单过滤仍可用）
+- `tests/test_qa_placeholders.py`：覆盖多类型混合、嵌套、空格、动态模式注册、自定义模式、非占位符文本等场景（12/12 通过）
