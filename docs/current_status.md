@@ -1,4 +1,4 @@
-﻿# GlyphLoom 当前进度快照（Stage 2）
+# GlyphLoom 当前进度快照（Stage 2）
 > 便于人类/AI 快速了解：做到哪了、还能做什么。
 最后更新：2025-11-16
 
@@ -6,17 +6,17 @@
 
 ## 1. 当前所处阶段
 - 当前大阶段：**Stage 2（占位符识别 & 基础 QA）**
-- Stage 1 回顾：1.1~1.5 已全部完成（配置/Adapter/Translator/Pipeline/GUI）
+- Stage 1 回顾：1.1~1.5 全部完成（配置/Adapter/Translator/Pipeline/GUI）
 - Stage 2 进展：
   - ✅ 2.1 占位符提取：解析器 + 动态模式注册，支持多括号/嵌套/空格
-  - ⏳ 2.2 QA 结果模型与框架：待实现
+  - ⏳ 2.2 QA 结果模型与框架：已有 Issue/QAResult 模型与 run 占位；待接入规则
   - ⏳ 2.3 占位符一致性规则：待实现
   - ⏳ 2.4 QA 导出与集成：待实现
   - ⏳ 2.5 CLI/配置 QA 开关：待实现
 
 ---
 
-## 2. 已完成内容摘录（含 Stage 1 全量 + Stage 2.1 占位符提取）
+## 2. 已完成内容摘录（含 Stage 1 全量 + Stage 2.1/2.2 基础）
 
 ### 2.1 配置模型与加载（1.1）
 - `glyphloom_core/core/models.py`
@@ -63,15 +63,20 @@
 
 ### 2.6 占位符提取（2.1）
 - `glyphloom_core/qa/placeholders.py`：
-  - 栈解析多种括号占位符（{{}} / [] / () / <> 等），支持空格与嵌套
+  - 栈解析多种括号占位符（`{{}}` / `[]` / `()` / `<>` 等），支持空格与嵌套
   - 动态模式注册：默认支持 `%s`、`%(name)s`、`${ENV}`；可通过 register_placeholder_pattern(s) 注入新模式
   - 接口：`extract_placeholders` 保持不变（白名单过滤仍可用）
 - `tests/test_qa_placeholders.py`：覆盖多类型混合、嵌套、空格、动态模式注册、自定义模式、非占位符文本等场景
 
+### 2.7 QA 基础模型（2.2 占位实现）
+- `glyphloom_core/qa/base.py`：定义 `Issue`、`QAResult`；`run(lines)` 当前返回空列表占位，待规则接入
+- `glyphloom_core/core/models.py`：`PipelineResult` 可选挂载 `qa_result`，便于后续集成
+- `tests/test_qa_base.py`：冒烟测试，空输入/无规则返回空列表，模型字段验证
+
 ---
 
 ## 3. 尚未完成 / 下一步计划
-- Stage 2 余项：QA 结果模型/框架、占位符一致性规则、QA 导出集成、CLI/配置 QA 开关
+- Stage 2 余项：QA 结果模型接入规则、占位符一致性规则、QA 导出集成、CLI/配置 QA 开关
 - 后续可选优化：GUI 进度/日志面板、多任务队列，待 Stage 2 主线完成后再排期
 
 ---
@@ -122,6 +127,9 @@ glyphloom_core/              # 核心逻辑（CLI/Adapter/Translator/Pipeline）
     config_loader.py         # YAML -> ProjectConfig 解析
     models.py                # 配置/结果模型
     pipeline.py              # 核心流水线（extract/translate/export）
+  qa/
+    base.py                  # QA 基础模型/接口
+    placeholders.py          # 占位符解析器
   translators/
     base.py                  # Translator 抽象基类
     openai_http.py           # OpenAI HTTP 假翻译实现
@@ -148,6 +156,8 @@ scripts/                     # 自动化脚本
 tests/                       # 测试用例
   __init__.py
   test_pipeline.py           # Pipeline 闭环测试
+  test_qa_base.py            # QA 框架冒烟
+  test_qa_placeholders.py    # 占位符提取测试
   test_smoke_core.py         # Core 冒烟
   test_table_adapter.py      # TableAdapter 测试
   test_translator_openai_http.py # Translator 假翻译测试

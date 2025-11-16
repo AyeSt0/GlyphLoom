@@ -1,6 +1,6 @@
-﻿# GlyphLoom · 字织机 · Roadmap（开发路线）
+# GlyphLoom · 字织机 · Roadmap（开发路线）
 
-> README 写给外部读者；Roadmap 是写给自己与协作者的施工图。所有 issue、进度记录、release note 都围绕本文件展开。
+> README 写给外部读者；Roadmap 是写给自己与协作者的「施工图」。所有 issue、记录进度、release note 都围绕本文件展开。
 
 ---
 
@@ -66,7 +66,7 @@
 - 详细多平台约束见 `docs/design_notes/platforms.md`。
 
 ### 1.4 开发自动化
-- [ ] `scripts/dev_setup.ps1`：一键创建/更新虚拟环境并执行 `pip install -e ".[dev]"`
+- [ ] `scripts/dev_setup.ps1`：一键创建/更新虚拟环境并执行 `pip install -e ".[dev]" `
 - [ ] `scripts/check_quality.ps1`：统一入口依次执行 `ruff check`、`black --check`、`pytest -q`
 - [ ] `tests/` 目录：至少包含一个冒烟测试，保证 `pytest` 随时可绿
 - [ ] `scripts/auto_commit.py`：提交前自动跑质量检查，失败时阻止 VERSION 递增及 `git commit`
@@ -75,7 +75,7 @@
 ---
 
 ## 2. Stage 0 · 项目骨架 & 工程环境（`v0.0.x`）
-当前状态：Stage 0 骨架已完成（v0.0.x），core / GUI / 自动化均可运行。
+当前状态：Stage 0 骨架已完成，core / GUI / 自动化均可运行。
 
 ### 2.1 目标
 - 建立 core / gui 的基础目录结构
