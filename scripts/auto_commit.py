@@ -384,6 +384,12 @@ def main() -> None:
     )
     if commit.returncode == 0:
         print(f"Auto-commit created: {title}")
+        # 提交成功后自动推送，避免只停留在本地分支
+        push = subprocess.run(["git", "push"], cwd=REPO_ROOT, text=True)
+        if push.returncode == 0:
+            print("Remote sync succeeded (git push).")
+        else:
+            print("Warning: git push failed，请手动检查远端同步。", file=sys.stderr)
     else:
         print("Commit failed", file=sys.stderr)
         sys.exit(commit.returncode)
