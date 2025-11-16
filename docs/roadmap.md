@@ -163,7 +163,7 @@
 
 **QA 模块**
 - [ ] `qa/base.py`：`run(lines) -> List[Issue]`
-- [ ] `placeholder_check.py`
+- [x] `placeholder_check.py`
 - [ ] `length_check.py`（可配置上下限）
 - [ ] 预留扩展位
 

@@ -9,14 +9,14 @@
 - Stage 1 回顾：1.1~1.5 全部完成（配置/Adapter/Translator/Pipeline/GUI）
 - Stage 2 进展：
   - ✅ 2.1 占位符提取：解析器 + 动态模式注册，支持多括号/嵌套/空格
-  - ⏳ 2.2 QA 结果模型与框架：已有 Issue/QAResult 模型与 run 占位；待接入规则
-  - ⏳ 2.3 占位符一致性规则：待实现
+  - ⏳ 2.2 QA 结果模型与框架：Issue/QAResult + run 占位已就绪，待接入规则
+  - ✅ 2.3 占位符一致性规则：集合一致性检查（含白名单），默认不校验顺序
   - ⏳ 2.4 QA 导出与集成：待实现
   - ⏳ 2.5 CLI/配置 QA 开关：待实现
 
 ---
 
-## 2. 已完成内容摘录（含 Stage 1 全量 + Stage 2.1/2.2 基础）
+## 2. 已完成内容摘录（含 Stage 1 全量 + Stage 2.1/2.2/2.3）
 
 ### 2.1 配置模型与加载（1.1）
 - `glyphloom_core/core/models.py`
@@ -73,11 +73,15 @@
 - `glyphloom_core/core/models.py`：`PipelineResult` 可选挂载 `qa_result`，便于后续集成
 - `tests/test_qa_base.py`：冒烟测试，空输入/无规则返回空列表，模型字段验证
 
+### 2.8 占位符一致性规则（2.3）
+- `glyphloom_core/qa/placeholder_check.py`：比较源/译占位符集合，生成缺失/多余 Issue，可用 whitelist 过滤；不强制顺序
+- `tests/test_qa_placeholder_check.py`：缺失/多余/一致/白名单场景验证
+
 ---
 
 ## 3. 尚未完成 / 下一步计划
-- Stage 2 余项：QA 结果模型接入规则、占位符一致性规则、QA 导出集成、CLI/配置 QA 开关
-- 后续可选优化：GUI 进度/日志面板、多任务队列，待 Stage 2 主线完成后再排期
+- Stage 2 余项：占位符一致性规则接入 QA 框架 & Pipeline；QA 导出集成；CLI/配置 QA 开关；长度检查等其他规则
+- 可选优化：未来如需严格格式，可提供顺序校验开关；视需求考虑性能优化/更多规则
 
 ---
 
@@ -130,6 +134,7 @@ glyphloom_core/              # 核心逻辑（CLI/Adapter/Translator/Pipeline）
   qa/
     base.py                  # QA 基础模型/接口
     placeholders.py          # 占位符解析器
+    placeholder_check.py     # 占位符一致性规则
   translators/
     base.py                  # Translator 抽象基类
     openai_http.py           # OpenAI HTTP 假翻译实现
@@ -158,6 +163,7 @@ tests/                       # 测试用例
   test_pipeline.py           # Pipeline 闭环测试
   test_qa_base.py            # QA 框架冒烟
   test_qa_placeholders.py    # 占位符提取测试
+  test_qa_placeholder_check.py # 占位符一致性测试
   test_smoke_core.py         # Core 冒烟
   test_table_adapter.py      # TableAdapter 测试
   test_translator_openai_http.py # Translator 假翻译测试
